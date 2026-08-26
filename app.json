@@ -1,0 +1,98 @@
+{
+  "expo": {
+    "name": "BeSafe",
+    "slug": "besafe",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "besafe",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0E1A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.besafe.app",
+      "config": {
+        "googleMapsApiKey": "YOUR_IOS_GOOGLE_MAPS_KEY_HERE"
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "BeSafe uses your location to verify rides and share your trip with loved ones for safety.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "BeSafe tracks your rides in real-time so we can alert authorities and your emergency contacts if you activate SOS.",
+        "NSCameraUsageDescription": "BeSafe needs camera access to scan vehicle QR codes and verify your driver.",
+        "NSPhotoLibraryUsageDescription": "BeSafe needs access to save your vehicle QR code for offline display.",
+        "NSPhotoLibraryAddUsageDescription": "Save your BeSafe verified vehicle QR code to your photos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#00A86B"
+      },
+      "package": "com.besafe.app",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "VIBRATE"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_ANDROID_GOOGLE_MAPS_KEY_HERE"
+        }
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow BeSafe to use your location for ride verification and safety tracking."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow BeSafe to access your camera to scan vehicle QR codes."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow BeSafe to save your vehicle QR code.",
+          "savePhotosPermission": "Allow BeSafe to save your vehicle QR code.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0A0E1A",
+          "image": "./assets/images/splash.png",
+          "imageWidth": 200
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    }
+  }
+}
