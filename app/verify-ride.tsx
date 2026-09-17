@@ -68,15 +68,15 @@ export default function VerifyRide() {
   }, [mode, token]);
 
   const startTracking = async () => {
-    if (!result?.ok) return;
+    if (!result?.ok || !result.vehicle || !result.driver) return;
     setStarting(true);
     try {
-      const ride = await ridesService.start(
-        result.vehicle.id,
-        result.driver.id,
-      );
-      setActiveRide(ride);
+      const ride = await ridesService.start(result.vehicle.id);
+
+      setActiveRide(ride, result.driver, result.vehicle);
       router.replace("/active-ride");
+    } catch (e: any) {
+      setError(e.message);
     } finally {
       setStarting(false);
     }
@@ -197,7 +197,7 @@ export default function VerifyRide() {
                 </Text>
               </View>
 
-              <DriverCard driver={result.driver} vehicle={result.vehicle} />
+              <DriverCard driver={result.driver!} vehicle={result.vehicle!} />
 
               {result.warnings && result.warnings.length > 0 && (
                 <Card
@@ -229,7 +229,7 @@ export default function VerifyRide() {
 
               <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
                 <Button
-                  label="I\u2019m getting in — start tracking"
+                  label="I'm getting in — start tracking"
                   onPress={startTracking}
                   loading={starting}
                 />
@@ -271,9 +271,9 @@ export default function VerifyRide() {
                 color="textSecondary"
                 style={{ marginTop: 8, textAlign: "center" }}
               >
-                This vehicle isn\u2019t in the BeSafe registry.{"\n"}
+                This vehicle isn't in the BeSafe registry.{"\n"}
                 <Text variant="body" style={{ fontWeight: "700" }}>
-                  Don\u2019t enter.
+                  Don't enter.
                 </Text>
               </Text>
 

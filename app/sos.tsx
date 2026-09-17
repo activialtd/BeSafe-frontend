@@ -5,9 +5,10 @@ import { Text } from "@/components/ui/Text";
 import { radius, spacing } from "@/constants/Theme";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useRide } from "@/contexts/rideStore";
-import { LAGOS_CENTER, mockEmergencyContacts } from "@/data/mockData";
 import { EMERGENCY_NUMBERS } from "@/services/endpoints";
+import { riderService } from "@/services/rider.service";
 import { sosService } from "@/services/sos.service";
+import { EmergencyContact } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,6 +28,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Stage = "idle" | "triggering" | "active" | "cancelling";
+const FALLBACK_LOC = { lat: 6.5244, lng: 3.3792 }; // Lagos fallback
 
 export default function SosScreen() {
   const { colors } = useTheme();
@@ -38,7 +40,16 @@ export default function SosScreen() {
   const [sosId, setSosId] = useState<string | null>(null);
   const [pin, setPin] = useState("");
   const [pinError, setPinError] = useState<string | null>(null);
+  const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const vibRef = useRef(false);
+
+  // Fetch real emergency contacts for the UI
+  useEffect(() => {
+    riderService
+      .getEmergencyContacts()
+      .then(setContacts)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -56,7 +67,7 @@ export default function SosScreen() {
 
     try {
       const event = await sosService.trigger({
-        location: activeRide?.currentLocation ?? LAGOS_CENTER,
+        location: activeRide?.currentLocation ?? FALLBACK_LOC,
         rideId: activeRide?.id,
         type: "panic",
       });
@@ -232,7 +243,6 @@ export default function SosScreen() {
           paddingBottom: insets.bottom + spacing.xl,
         }}
       >
-        {/* Header block */}
         <View style={{ alignItems: "center", marginBottom: spacing.xl }}>
           <MotiView
             from={{ scale: 1 }}
@@ -281,7 +291,6 @@ export default function SosScreen() {
           </Text>
         </View>
 
-        {/* Notified authorities */}
         <Text
           style={{
             color: "rgba(255,255,255,0.9)",
@@ -347,7 +356,6 @@ export default function SosScreen() {
           </View>
         ))}
 
-        {/* Emergency contacts */}
         <Text
           style={{
             color: "rgba(255,255,255,0.9)",
@@ -360,7 +368,7 @@ export default function SosScreen() {
         >
           EMERGENCY CONTACTS
         </Text>
-        {mockEmergencyContacts.map((c) => (
+        {contacts.map((c) => (
           <View
             key={c.id}
             style={{
@@ -383,7 +391,7 @@ export default function SosScreen() {
               }}
             >
               <Text style={{ color: "#fff", fontWeight: "700" }}>
-                {c.name[0]}
+                {c.name[0]?.toUpperCase()}
               </Text>
             </View>
             <View style={{ flex: 1, marginLeft: 12 }}>
@@ -412,8 +420,18 @@ export default function SosScreen() {
             </View>
           </View>
         ))}
+        {contacts.length === 0 && (
+          <Text
+            style={{
+              color: "rgba(255,255,255,0.7)",
+              fontStyle: "italic",
+              paddingLeft: 4,
+            }}
+          >
+            No emergency contacts set.
+          </Text>
+        )}
 
-        {/* Cancel with PIN */}
         <View
           style={{
             marginTop: spacing.xl,
@@ -433,7 +451,7 @@ export default function SosScreen() {
               lineHeight: 18,
             }}
           >
-            Enter your 4-digit safety PIN to cancel. Demo PIN: 1234
+            Enter your 4-digit safety PIN to cancel.
           </Text>
           <TextInput
             value={pin}
@@ -442,6 +460,7 @@ export default function SosScreen() {
             maxLength={4}
             placeholder="• • • •"
             placeholderTextColor="rgba(255,255,255,0.5)"
+            secureTextEntry
             style={{
               backgroundColor: "rgba(255,255,255,0.15)",
               borderRadius: radius.md,

@@ -30,6 +30,7 @@ export default function NinScreen() {
   const [serverError, setServerError] = useState<string | null>(null);
   const setPendingNin = useAuth((s) => s.setPendingNin);
   const finish = useAuth((s) => s.finishOnboarding);
+  const setPendingFullName = useAuth((s) => s.setPendingFullName);
   const pendingRole = useAuth((s) => s.pendingRole);
 
   const isDriver = pendingRole === "driver";
@@ -41,6 +42,7 @@ export default function NinScreen() {
       const res = await authService.verifyNin(nin);
       setVerified({ fullName: res.fullName });
       setPendingNin(nin);
+      setPendingFullName(res.fullName);
     } catch (e: any) {
       setServerError(e.message);
     } finally {
@@ -73,8 +75,8 @@ export default function NinScreen() {
         }}
       >
         {isDriver
-          ? "This is how riders know you\u2019re a real, verified driver — not just someone who painted a car yellow."
-          : "One quick check so we know you\u2019re real. Drivers never see your NIN."}
+          ? "This is how riders know you are a real, verified driver."
+          : "One quick check so we know you are real."}
       </Text>
 
       {!verified ? (
@@ -161,7 +163,7 @@ export default function NinScreen() {
               </View>
             </MotiView>
             <Text variant="h2" style={{ marginTop: spacing.base }}>
-              You\u2019re in
+              You're in
             </Text>
             <Text
               variant="body"

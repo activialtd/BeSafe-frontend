@@ -4,12 +4,9 @@ import { Text } from "@/components/ui/Text";
 import { radius, shadow, spacing } from "@/constants/Theme";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useRide } from "@/contexts/rideStore";
-import {
-  LAGOS_CENTER,
-  mockDriverAccount,
-  mockEmergencyContacts,
-} from "@/data/mockData";
 import { ridesService } from "@/services/rides.service";
+import { riderService } from "@/services/rider.service";
+import { EmergencyContact } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
@@ -27,21 +24,35 @@ import {
 } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { mapStyleDark, mapStyleLight } from "./(rider)/(tabs)/mapStyles";
+import { mapStyleDark, mapStyleLight } from "@/constants/MapStyles";
+
+const DEFAULT_LOC = { lat: 6.5244, lng: 3.3792 }; // Lagos fallback
 
 export default function ActiveRide() {
   const { colors, theme } = useTheme();
   const insets = useSafeAreaInsets();
+
   const ride = useRide((s) => s.activeRide);
+  const driver = useRide((s) => s.activeDriver);
+  const vehicle = useRide((s) => s.activeVehicle);
   const setActiveRide = useRide((s) => s.setActiveRide);
 
   const mapRef = useRef<MapView>(null);
-  const [pos, setPos] = useState<{ lat: number; lng: number }>(LAGOS_CENTER);
+  const [pos, setPos] = useState<{ lat: number; lng: number }>(DEFAULT_LOC);
   const [seconds, setSeconds] = useState(0);
   const [sharedWith, setSharedWith] = useState<string[]>(
     ride?.sharedWith ?? [],
   );
+  const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [ending, setEnding] = useState(false);
+
+  // Fetch real emergency contacts on mount
+  useEffect(() => {
+    riderService
+      .getEmergencyContacts()
+      .then(setContacts)
+      .catch(() => {});
+  }, []);
 
   // Duration timer
   useEffect(() => {
@@ -78,7 +89,7 @@ export default function ActiveRide() {
     };
   }, [ride?.id]);
 
-  if (!ride) {
+  if (!ride || !driver || !vehicle) {
     return (
       <View
         style={{
@@ -101,9 +112,6 @@ export default function ActiveRide() {
       </View>
     );
   }
-
-  const driver = mockDriverAccount;
-  const vehicle = driver.vehicles[0];
 
   const toggleContact = (id: string) => {
     Haptics.selectionAsync().catch(() => {});
@@ -131,7 +139,7 @@ export default function ActiveRide() {
               Haptics.notificationAsync(
                 Haptics.NotificationFeedbackType.Success,
               ).catch(() => {});
-              setActiveRide(null);
+              setActiveRide(null); // clears driver/vehicle automatically in the updated store
               router.replace("/(rider)/(tabs)");
             } finally {
               setEnding(false);
@@ -167,7 +175,6 @@ export default function ActiveRide() {
         showsCompass={false}
         showsMyLocationButton={false}
       >
-        {/* Live position: pulsing dot */}
         <Marker
           coordinate={{ latitude: pos.lat, longitude: pos.lng }}
           anchor={{ x: 0.5, y: 0.5 }}
@@ -199,7 +206,6 @@ export default function ActiveRide() {
         </Marker>
       </MapView>
 
-      {/* Top ribbon */}
       <View style={[styles.top, { paddingTop: insets.top + 8 }]}>
         <BlurView
           intensity={40}
@@ -252,12 +258,10 @@ export default function ActiveRide() {
         </View>
       </View>
 
-      {/* Floating SOS on the map */}
       <View style={[styles.sosWrap, { bottom: insets.bottom + 360 }]}>
         <SOSButton size="compact" />
       </View>
 
-      {/* Bottom sheet */}
       <MotiView
         from={{ translateY: 500 }}
         animate={{ translateY: 0 }}
@@ -274,12 +278,27 @@ export default function ActiveRide() {
       >
         <View style={[styles.handle, { backgroundColor: colors.border }]} />
 
-        {/* Driver row */}
+        {/* Real Driver Info */}
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Image
-            source={{ uri: driver.photoUrl }}
-            style={{ width: 52, height: 52, borderRadius: 26 }}
-          />
+          {driver.photoUrl ? (
+            <Image
+              source={{ uri: driver.photoUrl }}
+              style={{ width: 52, height: 52, borderRadius: 26 }}
+            />
+          ) : (
+            <View
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 26,
+                backgroundColor: colors.primaryMuted,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons name="person" size={24} color={colors.primary} />
+            </View>
+          )}
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text variant="h4">{driver.fullName}</Text>
             <View
@@ -295,7 +314,7 @@ export default function ActiveRide() {
               >
                 <Ionicons name="star" size={12} color={colors.warning} />
                 <Text variant="caption" style={{ fontWeight: "700" }}>
-                  {driver.rating.toFixed(1)}
+                  {driver.rating?.toFixed(1) || "5.0"}
                 </Text>
               </View>
               <Text variant="caption" color="textTertiary">
@@ -308,7 +327,6 @@ export default function ActiveRide() {
           </View>
         </View>
 
-        {/* Plate strip */}
         <View
           style={{
             marginTop: spacing.base,
@@ -326,7 +344,7 @@ export default function ActiveRide() {
           </Text>
         </View>
 
-        {/* Sharing */}
+        {/* Real Contacts */}
         <View style={{ marginTop: spacing.lg }}>
           <View
             style={{
@@ -348,7 +366,7 @@ export default function ActiveRide() {
           </View>
 
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {mockEmergencyContacts.map((c) => {
+            {contacts.map((c) => {
               const shared = sharedWith.includes(c.id);
               return (
                 <Pressable key={c.id} onPress={() => toggleContact(c.id)}>
@@ -388,7 +406,6 @@ export default function ActiveRide() {
           </View>
         </View>
 
-        {/* Arrived safely */}
         <View style={{ marginTop: spacing.xl }}>
           <Button
             label="I've arrived safely"

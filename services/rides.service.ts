@@ -1,69 +1,42 @@
-import { mockTripHistory } from "@/data/mockData";
 import { Location, Ride } from "@/types";
-import { api, mockDelay, USE_MOCK } from "./api";
+import { api } from "./api";
 import { endpoints } from "./endpoints";
 
+const unwrap = (res: any) => res.data?.data || res.data;
+
 export const ridesService = {
-  /**
-   * Start a monitored trip. No pickup / destination — this just begins the
-   * "someone is watching me right now" timespan.
-   */
-  async start(vehicleId: string, driverId: string): Promise<Ride> {
-    if (USE_MOCK) {
-      const ride: Ride = {
-        id: "ride_" + Date.now(),
-        riderId: "user_r_001",
-        driverId,
-        vehicleId,
-        status: "active",
-        startedAt: new Date().toISOString(),
-        sharedWith: [],
-      };
-      return mockDelay(ride, 400);
-    }
-    const { data } = await api.post(endpoints.rides.start, {
-      vehicleId,
-      driverId,
+  async start(vehicleId: string): Promise<Ride> {
+    const { data } = await api.post(endpoints.rides.start, { vehicleId });
+    return unwrap(data);
+  },
+
+  async end(
+    rideId: string,
+    reason: "arrived" | "cancelled" | "sos_resolved" = "arrived",
+  ): Promise<{ ended: boolean }> {
+    const { data } = await api.post(endpoints.rides.end(rideId), { reason });
+    return unwrap(data);
+  },
+
+  async updateLocation(
+    rideId: string,
+    loc: Location & { accuracyMeters?: number; speedMps?: number },
+  ): Promise<void> {
+    await api.post(endpoints.rides.ping(rideId), {
+      lat: loc.lat,
+      lng: loc.lng,
+      accuracyMeters: loc.accuracyMeters,
+      speedMps: loc.speedMps,
+      source: "http",
     });
-    return data;
   },
 
-  /** Rider tapped "arrived safely". */
-  async end(rideId: string): Promise<Ride> {
-    if (USE_MOCK) {
-      return mockDelay(
-        {
-          id: rideId,
-          riderId: "user_r_001",
-          driverId: "user_d_002",
-          vehicleId: "veh_001",
-          status: "completed",
-          startedAt: new Date(Date.now() - 20 * 60000).toISOString(),
-          endedAt: new Date().toISOString(),
-          sharedWith: [],
-        } as Ride,
-        400,
-      );
-    }
-    const { data } = await api.post(endpoints.rides.end(rideId));
-    return data;
-  },
-
-  /** Push a new location ping while a ride is active. */
-  async updateLocation(rideId: string, loc: Location): Promise<void> {
-    if (USE_MOCK) return mockDelay(undefined, 100);
-    await api.post(endpoints.rides.updateLocation(rideId), loc);
-  },
-
-  /** Add / remove contacts allowed to watch the trip live. */
   async setSharedWith(rideId: string, contactIds: string[]): Promise<void> {
-    if (USE_MOCK) return mockDelay(undefined, 150);
-    await api.post(endpoints.rides.shareLink(rideId), { contactIds });
+    await api.put(endpoints.rides.shares(rideId), { contactIds });
   },
 
   async history(): Promise<Ride[]> {
-    if (USE_MOCK) return mockDelay(mockTripHistory);
-    const { data } = await api.get(endpoints.rider.trips);
-    return data;
+    const { data } = await api.get(endpoints.rides.history);
+    return unwrap(data);
   },
 };

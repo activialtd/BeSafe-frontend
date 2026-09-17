@@ -1,7 +1,8 @@
-import { mockEmergencyContacts } from '@/data/mockData';
-import { Location, SosEvent, SosType } from '@/types';
-import { api, mockDelay, USE_MOCK } from './api';
-import { endpoints } from './endpoints';
+import { Location, SosEvent, SosType } from "@/types";
+import { api } from "./api";
+import { endpoints } from "./endpoints";
+
+const unwrap = (res: any) => res.data?.data || res.data;
 
 export const sosService = {
   async trigger(params: {
@@ -9,38 +10,17 @@ export const sosService = {
     rideId?: string;
     type?: SosType;
   }): Promise<SosEvent> {
-    const { location, rideId, type = 'panic' } = params;
-    if (USE_MOCK) {
-      const event: SosEvent = {
-        id: 'sos_' + Date.now(),
-        userId: 'user_r_001',
-        rideId,
-        type,
-        status: 'active',
-        triggeredAt: new Date().toISOString(),
-        location,
-        notifiedContacts: mockEmergencyContacts.map(c => c.id),
-        notifiedAuthorities: ['LASEMA', 'RRS-Lagos', 'NPF-112'],
-        responseEtaSec: 480, // 8 min
-      };
-      return mockDelay(event, 700);
-    }
-    const { data } = await api.post(endpoints.sos.trigger, { rideId, type, ...location });
-    return data;
+    const { data } = await api.post(endpoints.sos.trigger, {
+      lat: params.location.lat,
+      lng: params.location.lng,
+      rideId: params.rideId,
+      type: params.type || "panic",
+    });
+    return unwrap(data);
   },
 
-  async cancel(sosId: string, pin: string): Promise<{ ok: boolean }> {
-    if (USE_MOCK) {
-      if (pin !== '1234') throw new Error('Incorrect safety PIN');
-      return mockDelay({ ok: true }, 400);
-    }
+  async cancel(sosId: string, pin: string): Promise<{ cancelled: boolean }> {
     const { data } = await api.post(endpoints.sos.cancel(sosId), { pin });
-    return data;
-  },
-
-  async silentTrigger(location: Location): Promise<SosEvent> {
-    if (USE_MOCK) return this.trigger({ location, type: 'silent' });
-    const { data } = await api.post(endpoints.sos.silentTrigger, location);
-    return data;
+    return unwrap(data);
   },
 };

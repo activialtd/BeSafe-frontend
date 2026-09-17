@@ -21,11 +21,11 @@ export function AnimatedSplash({ visible = true }: { visible?: boolean }) {
       from={{ opacity: 1 }}
       animate={{ opacity: visible ? 1 : 0 }}
       transition={{ type: "timing", duration: 400 }}
-      style={[StyleSheet.absoluteFillObject, styles.root]}
+      style={[StyleSheet.absoluteFill, styles.root]}
       pointerEvents={visible ? "auto" : "none"}
     >
       {/* Background gradient */}
-      <View style={StyleSheet.absoluteFillObject}>
+      <View style={StyleSheet.absoluteFill}>
         <Svg width="100%" height="100%">
           <Defs>
             <RadialGradient id="splashBg" cx="0.5" cy="0.4" r="0.7">

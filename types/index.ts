@@ -81,6 +81,22 @@ export interface Ride {
   currentLocation?: Location;
   /** Emergency-contact IDs the rider chose to share this trip with */
   sharedWith: string[];
+
+  /**
+   * Joined relational data
+   * (Available on history/history-detail endpoints)
+   */
+  driver?: {
+    id: string;
+    fullName: string;
+    photoUrl?: string;
+  } | null;
+  vehicle?: {
+    id: string;
+    brand: string;
+    model: string;
+    plateNumber: string;
+  } | null;
 }
 
 export type SosType = "panic" | "silent" | "crash" | "medical";

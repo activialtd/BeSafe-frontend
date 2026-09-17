@@ -1,20 +1,21 @@
-import { authService } from '@/services/auth.service';
-import { User, UserRole } from '@/types';
-import { create } from 'zustand';
+import { authService } from "@/services/auth.service";
+import { User, UserRole } from "@/types";
+import { create } from "zustand";
 
 interface AuthState {
   user: User | null;
   loading: boolean;
   hydrated: boolean;
-  // during onboarding
   pendingRole: UserRole | null;
   pendingPhone: string | null;
   pendingNin: string | null;
+  pendingFullName: string | null;
 
   hydrate: () => Promise<void>;
   setPendingRole: (r: UserRole) => void;
   setPendingPhone: (p: string) => void;
   setPendingNin: (n: string) => void;
+  setPendingFullName: (fn: string) => void;
   finishOnboarding: () => Promise<User>;
   setUser: (u: User) => void;
   signOut: () => Promise<void>;
@@ -27,6 +28,7 @@ export const useAuth = create<AuthState>((set, get) => ({
   pendingRole: null,
   pendingPhone: null,
   pendingNin: null,
+  pendingFullName: null,
 
   async hydrate() {
     set({ loading: true });
@@ -37,11 +39,15 @@ export const useAuth = create<AuthState>((set, get) => ({
   setPendingRole: (r) => set({ pendingRole: r }),
   setPendingPhone: (p) => set({ pendingPhone: p }),
   setPendingNin: (n) => set({ pendingNin: n }),
+  setPendingFullName: (fn) => set({ pendingFullName: fn }),
 
   async finishOnboarding() {
-    const role = get().pendingRole ?? 'rider';
+    const role = get().pendingRole ?? "rider";
+    const fullName = get().pendingFullName ?? "BeSafe User";
+
     set({ loading: true });
-    const user = await authService.setRole(role);
+    const { user } = await authService.setRole(role, fullName);
+
     set({ user, loading: false });
     return user;
   },
@@ -55,6 +61,7 @@ export const useAuth = create<AuthState>((set, get) => ({
       pendingRole: null,
       pendingPhone: null,
       pendingNin: null,
+      pendingFullName: null,
     });
   },
 }));

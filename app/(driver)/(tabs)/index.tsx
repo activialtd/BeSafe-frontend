@@ -18,13 +18,14 @@ import { Pressable, Switch, View } from "react-native";
 export default function DriverDashboard() {
   const { colors } = useTheme();
   const user = useAuth((s) => s.user);
-  const [driver, setDriver] = useState<Driver | null>(null);
+
+  const [profileData, setProfileData] = useState<any>(null);
   const [online, setOnline] = useState(false);
 
   useEffect(() => {
-    driverService.getProfile().then((d) => {
-      setDriver(d);
-      setOnline(d.isOnline);
+    driverService.getProfile().then((d: any) => {
+      setProfileData(d);
+      setOnline(d?.driver?.isOnline ?? false);
     });
   }, []);
 
@@ -33,7 +34,8 @@ export default function DriverDashboard() {
     await driverService.setOnline(v);
   };
 
-  const vehicles: Vehicle[] = driver?.vehicles ?? [];
+  const driverDetails = profileData?.driver;
+  const vehicles: Vehicle[] = profileData?.vehicles ?? [];
 
   return (
     <Screen scroll contentContainerStyle={{ paddingBottom: 120 }}>
@@ -122,7 +124,7 @@ export default function DriverDashboard() {
                 style={{ color: online ? "#fff" : colors.text }}
               >
                 {online
-                  ? "You\u2019re visible to riders"
+                  ? "You're visible to riders"
                   : "Go on duty to be visible"}
               </Text>
               <Text
@@ -136,7 +138,7 @@ export default function DriverDashboard() {
               >
                 {online
                   ? "Riders nearby can see and verify your vehicle."
-                  : "Toggle on when you\u2019re working today."}
+                  : "Toggle on when you're working today."}
               </Text>
             </View>
             <Switch
@@ -155,13 +157,13 @@ export default function DriverDashboard() {
       >
         <StatCard
           label="Verified trips"
-          value={String(driver?.totalTrips ?? 0)}
+          value={String(driverDetails?.totalVerifiedTrips ?? 0)} // Fixed field name
           icon="checkmark-done"
           tint={colors.primary}
         />
         <StatCard
           label="Rating"
-          value={driver?.rating.toFixed(1) ?? "—"}
+          value={driverDetails?.rating?.toFixed(1) ?? "—"} // Added the extra ?. check
           icon="star"
           tint={colors.warning}
         />

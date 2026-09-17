@@ -1,31 +1,33 @@
-import { mockEmergencyContacts } from '@/data/mockData';
-import { EmergencyContact } from '@/types';
-import { api, mockDelay, USE_MOCK } from './api';
-import { endpoints } from './endpoints';
+import { EmergencyContact } from "@/types";
+import { api } from "./api";
+import { endpoints } from "./endpoints";
+
+const unwrap = (res: any) => res.data?.data || res.data;
 
 export const riderService = {
   async getEmergencyContacts(): Promise<EmergencyContact[]> {
-    if (USE_MOCK) return mockDelay(mockEmergencyContacts);
-    const { data } = await api.get(endpoints.rider.emergencyContacts);
-    return data;
+    try {
+      const res = await api.get(endpoints.rider?.contacts || "/rider/contacts");
+      const data = unwrap(res);
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
-  async addEmergencyContact(payload: Omit<EmergencyContact, 'id'>): Promise<EmergencyContact> {
-    if (USE_MOCK) {
-      const c: EmergencyContact = { id: 'ec_' + Date.now(), ...payload };
-      mockEmergencyContacts.push(c);
-      return mockDelay(c, 300);
-    }
-    const { data } = await api.post(endpoints.rider.emergencyContacts, payload);
-    return data;
+  async addEmergencyContact(payload: {
+    name: string;
+    phone: string;
+    relationship: string;
+  }): Promise<EmergencyContact> {
+    const res = await api.post(
+      endpoints.rider?.contacts || "/rider/contacts",
+      payload,
+    );
+    return unwrap(res);
   },
 
   async removeEmergencyContact(id: string): Promise<void> {
-    if (USE_MOCK) {
-      const idx = mockEmergencyContacts.findIndex(c => c.id === id);
-      if (idx > -1) mockEmergencyContacts.splice(idx, 1);
-      return mockDelay(undefined, 200);
-    }
-    await api.delete(`${endpoints.rider.emergencyContacts}/${id}`);
+    await api.delete(`${endpoints.rider?.contacts || "/rider/contacts"}/${id}`);
   },
 };

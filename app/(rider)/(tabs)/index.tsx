@@ -5,11 +5,6 @@ import { radius, shadow, spacing } from "@/constants/Theme";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/authStore";
 import { useRide } from "@/contexts/rideStore";
-import {
-  LAGOS_CENTER,
-  mockNearbyDrivers,
-  mockUnsafeZones,
-} from "@/data/mockData";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
@@ -20,7 +15,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { Image, Platform, Pressable, StyleSheet, View } from "react-native";
 import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { mapStyleDark, mapStyleLight } from "./mapStyles";
+import { mapStyleDark, mapStyleLight } from "@/constants/MapStyles";
+
+const LAGOS_CENTER = { lat: 6.5244, lng: 3.3792 };
 
 export default function RiderHome() {
   const { colors, theme } = useTheme();
@@ -28,10 +25,15 @@ export default function RiderHome() {
   const user = useAuth((s) => s.user);
   const activeSos = useRide((s) => s.activeSos);
   const mapRef = useRef<MapView>(null);
+
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
     null,
   );
   const [showUnsafe, setShowUnsafe] = useState(true);
+
+  // Empty arrays ready to be wired to a backend /nearby endpoint later
+  const [nearbyDrivers, setNearbyDrivers] = useState<any[]>([]);
+  const [unsafeZones, setUnsafeZones] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -58,7 +60,6 @@ export default function RiderHome() {
 
   return (
     <View style={styles.root}>
-      {/* Map */}
       <MapView
         ref={mapRef}
         style={StyleSheet.absoluteFill}
@@ -74,7 +75,7 @@ export default function RiderHome() {
         showsMyLocationButton={false}
         showsCompass={false}
       >
-        {mockNearbyDrivers.map((d, i) => (
+        {nearbyDrivers.map((d, i) => (
           <Marker
             key={d.id}
             coordinate={{
@@ -98,7 +99,7 @@ export default function RiderHome() {
         ))}
 
         {showUnsafe &&
-          mockUnsafeZones.map((z) => (
+          unsafeZones.map((z) => (
             <Circle
               key={z.id}
               center={{ latitude: z.center.lat, longitude: z.center.lng }}
@@ -116,7 +117,6 @@ export default function RiderHome() {
           ))}
       </MapView>
 
-      {/* Top bar */}
       <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
         <BlurView
           intensity={theme === "dark" ? 40 : 60}
@@ -162,7 +162,6 @@ export default function RiderHome() {
         </View>
       </View>
 
-      {/* Map controls */}
       <View style={[styles.mapControls, { top: insets.top + 100 }]}>
         <Pressable
           onPress={() => setShowUnsafe((v) => !v)}
@@ -206,7 +205,6 @@ export default function RiderHome() {
         </Pressable>
       </View>
 
-      {/* SOS ACTIVE bubble — floats above the sheet when SOS is running */}
       {sosIsActive && (
         <View style={[styles.sosBubbleWrap, { bottom: insets.bottom + 340 }]}>
           <Pressable onPress={() => router.push("/sos")}>
@@ -233,7 +231,6 @@ export default function RiderHome() {
         </View>
       )}
 
-      {/* Bottom sheet */}
       <MotiView
         from={{ translateY: 400 }}
         animate={{ translateY: 0 }}
@@ -259,9 +256,7 @@ export default function RiderHome() {
           Scan the QR sticker inside the vehicle before you enter.
         </Text>
 
-        {/* Two side-by-side CTAs: Scan QR + SOS */}
         <View style={{ flexDirection: "row", gap: spacing.md }}>
-          {/* Scan QR */}
           <Pressable
             onPress={() => router.push("/(rider)/(tabs)/scan")}
             style={{ flex: 1 }}
@@ -281,7 +276,6 @@ export default function RiderHome() {
             </View>
           </Pressable>
 
-          {/* Panic / SOS */}
           <Pressable onPress={openSos} style={{ flex: 1 }}>
             <MotiView
               from={{ scale: 1 }}
@@ -317,56 +311,6 @@ export default function RiderHome() {
               </View>
             </MotiView>
           </Pressable>
-        </View>
-
-        {/* Nearby drivers count */}
-        <View
-          style={{
-            marginTop: spacing.lg,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <View
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: 3,
-              backgroundColor: colors.primary,
-              marginRight: 6,
-            }}
-          />
-          <Text variant="caption" color="textSecondary" style={{ flex: 1 }}>
-            {mockNearbyDrivers.length} verified vehicles nearby
-          </Text>
-        </View>
-
-        {/* Nearby drivers row */}
-        <View style={{ flexDirection: "row", marginTop: spacing.sm, gap: 8 }}>
-          {mockNearbyDrivers.slice(0, 3).map((d) => (
-            <Card
-              key={d.id}
-              padding="sm"
-              style={{ flex: 1, alignItems: "center" }}
-              elevated={false}
-              bordered
-            >
-              <Image
-                source={{ uri: d.photoUrl }}
-                style={{ width: 40, height: 40, borderRadius: 20 }}
-              />
-              <Text
-                variant="caption"
-                style={{ marginTop: 6, fontWeight: "700" }}
-                numberOfLines={1}
-              >
-                {d.fullName.split(" ")[0]}
-              </Text>
-              <Text variant="caption" color="textTertiary">
-                {d.distance}
-              </Text>
-            </Card>
-          ))}
         </View>
       </MotiView>
     </View>

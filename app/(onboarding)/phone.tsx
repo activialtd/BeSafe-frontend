@@ -43,13 +43,14 @@ export default function PhoneScreen() {
     setServerError(null);
     const local = digits.startsWith("0") ? digits.slice(1) : digits;
     const normalized = `+234${local}`;
+
     try {
       setLoading(true);
       await authService.requestOtp(normalized);
       setPendingPhone(normalized);
       router.push("/(onboarding)/otp");
     } catch (e: any) {
-      setServerError(e.message ?? "Something went wrong. Try again.");
+      setServerError(e.message);
     } finally {
       setLoading(false);
     }
@@ -58,13 +59,13 @@ export default function PhoneScreen() {
   return (
     <Screen scroll>
       <Header />
-      <Text variant="displaySm">What\u2019s your number?</Text>
+      <Text variant="displaySm">What is your number?</Text>
       <Text
         variant="body"
         color="textSecondary"
         style={{ marginTop: spacing.sm, marginBottom: spacing.xl }}
       >
-        We\u2019ll text you a 6-digit code to sign in.
+        We will text you a 6-digit code to sign in.
       </Text>
 
       <Input
@@ -109,7 +110,7 @@ export default function PhoneScreen() {
           style={{ marginTop: 2 }}
         />
         <Text variant="bodySm" color="textSecondary" style={{ flex: 1 }}>
-          By continuing you agree to BeSafe\u2019s Terms.
+          By continuing you agree to BeSafe Terms.
         </Text>
       </View>
 
