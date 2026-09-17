@@ -20,14 +20,11 @@ export const riderService = {
     phone: string;
     relationship: string;
   }): Promise<EmergencyContact> {
-    const res = await api.post(
-      endpoints.rider?.contacts || "/rider/contacts",
-      payload,
-    );
+    const res = await api.post(endpoints.rider?.contacts, payload);
     return unwrap(res);
   },
 
   async removeEmergencyContact(id: string): Promise<void> {
-    await api.delete(`${endpoints.rider?.contacts || "/rider/contacts"}/${id}`);
+    await api.delete(endpoints.rider.deleteContact(id));
   },
 };

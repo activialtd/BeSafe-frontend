@@ -2,7 +2,7 @@ import { LogoMark } from "@/components/ui/Logo";
 import { Screen } from "@/components/ui/Screen";
 import { Text } from "@/components/ui/Text";
 import { useAuth } from "@/contexts/authStore";
-import { Redirect } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { MotiView } from "moti";
 import { View } from "react-native";
 

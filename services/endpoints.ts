@@ -14,8 +14,9 @@ export const endpoints = {
   driver: {
     me: "/driver/me",
     verifyLicense: "/driver/license/verify",
+    verifyPlateNumber: "/driver/verify-plate",
     vehicles: "/driver/vehicles",
-    vehicle: (id: string) => `/driver/vehicles/${id}`,
+    removeVehicle: (id: string) => `/driver/vehicles/${id}`,
     online: "/driver/online",
   },
   verify: {
@@ -24,6 +25,7 @@ export const endpoints = {
   },
   rider: {
     contacts: "/rider/contacts",
+    deleteContact: (id: string) => `/rider/contacts/${id}`,
   },
   rides: {
     start: "/rides",

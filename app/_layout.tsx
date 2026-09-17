@@ -64,19 +64,32 @@ function AppShell() {
 
     const inOnboardingGroup = segments[0] === "(onboarding)";
 
-    // Use a tiny timeout to ensure Expo Router has finished mounting the tree
+    // 1. Create a whitelist of root screens that ANY logged-in user can visit
+    const globalProtectedScreens = [
+      "sos",
+      "settings",
+      "verify-ride",
+      "active-ride",
+      "emergency-contacts",
+      "register-vehicles",
+      "qr-code",
+    ];
+    const isGlobalScreen = globalProtectedScreens.includes(
+      segments[0] as string,
+    );
+
     setTimeout(() => {
       if (!user && !inOnboardingGroup) {
-        // 1. Not logged in? Kick to welcome screen.
+        // Not logged in? Kick to welcome screen.
         router.replace("/(onboarding)/welcome");
       } else if (user) {
-        // 2. Logged in? Ensure they are in the correct dashboard.
         const inDriverGroup = segments[0] === "(driver)";
         const inRiderGroup = segments[0] === "(rider)";
 
-        if (user.role === "driver" && !inDriverGroup) {
+        // 2. Allow them if they are on a global screen, otherwise enforce their specific folder
+        if (user.role === "driver" && !inDriverGroup && !isGlobalScreen) {
           router.replace("/(driver)/(tabs)");
-        } else if (user.role === "rider" && !inRiderGroup) {
+        } else if (user.role === "rider" && !inRiderGroup && !isGlobalScreen) {
           router.replace("/(rider)/(tabs)");
         }
       }

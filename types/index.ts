@@ -15,6 +15,7 @@ export interface User {
   role: UserRole;
   nin?: string;
   ninStatus: VerificationStatus;
+  sosPinSet: boolean;
   createdAt: string;
 }
 

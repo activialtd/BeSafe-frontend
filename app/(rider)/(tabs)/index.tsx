@@ -16,6 +16,7 @@ import { Image, Platform, Pressable, StyleSheet, View } from "react-native";
 import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { mapStyleDark, mapStyleLight } from "@/constants/MapStyles";
+import SetSosPinModal from "@/components/ui/SetSosPin";
 
 const LAGOS_CENTER = { lat: 6.5244, lng: 3.3792 };
 
@@ -30,6 +31,8 @@ export default function RiderHome() {
     null,
   );
   const [showUnsafe, setShowUnsafe] = useState(true);
+
+  const [showSosPinModal, setShowSosPinModal] = useState(false);
 
   // Empty arrays ready to be wired to a backend /nearby endpoint later
   const [nearbyDrivers, setNearbyDrivers] = useState<any[]>([]);
@@ -54,6 +57,15 @@ export default function RiderHome() {
   const sosIsActive = activeSos?.status === "active";
 
   const openSos = () => {
+    if (!user?.sosPinSet) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(
+        () => {},
+      );
+      setShowSosPinModal(true);
+      return;
+    }
+
+    // Proceed to SOS
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
     router.push("/sos");
   };
@@ -312,6 +324,20 @@ export default function RiderHome() {
             </MotiView>
           </Pressable>
         </View>
+        <SetSosPinModal
+          visible={showSosPinModal}
+          onClose={() => setShowSosPinModal(false)}
+          onSuccess={() => {
+            setShowSosPinModal(false);
+
+            setTimeout(() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(
+                () => {},
+              );
+              router.push("/sos");
+            }, 350);
+          }}
+        />
       </MotiView>
     </View>
   );

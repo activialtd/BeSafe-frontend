@@ -14,31 +14,42 @@ export interface RegisterVehiclePayload {
 
 const unwrap = (res: any) => res.data?.data || res.data;
 
-
 export const driverService = {
   async getProfile(): Promise<Driver> {
-    const { data } = await api.get(endpoints.driver.me);
-    return unwrap(data);
+    const res = await api.get(endpoints.driver.me);
+    return unwrap(res);
   },
 
   async verifyLicense(
     licenseNumber: string,
     dateOfBirth?: string,
   ): Promise<{ ok: boolean; fullName: string }> {
-    const { data } = await api.post(endpoints.driver.verifyLicense, {
+    const res = await api.post(endpoints.driver.verifyLicense, {
       licenseNumber,
       dateOfBirth,
     });
-    return unwrap(data);
+    return unwrap(res);
+  },
+
+  async verifyPlate(plateNumber: string): Promise<{ details: any }> {
+    const res = await api.post(endpoints.driver.verifyPlateNumber, {
+      plateNumber,
+    });
+    return unwrap(res);
   },
 
   async registerVehicle(payload: RegisterVehiclePayload): Promise<Vehicle> {
-    const { data } = await api.post(endpoints.driver.vehicles, payload);
-    return unwrap(data);
+    const res = await api.post(endpoints.driver.vehicles, payload);
+    return unwrap(res);
+  },
+
+  async deleteVehicle(vehicleId: string): Promise<void> {
+    const res = await api.delete(endpoints.driver.removeVehicle(vehicleId));
+    return unwrap(res);
   },
 
   async setOnline(online: boolean): Promise<{ online: boolean }> {
-    const { data } = await api.put(endpoints.driver.online, { online });
-    return unwrap(data);
+    const res = await api.put(endpoints.driver.online, { online });
+    return unwrap(res);
   },
 };

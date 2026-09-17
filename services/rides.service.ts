@@ -6,16 +6,16 @@ const unwrap = (res: any) => res.data?.data || res.data;
 
 export const ridesService = {
   async start(vehicleId: string): Promise<Ride> {
-    const { data } = await api.post(endpoints.rides.start, { vehicleId });
-    return unwrap(data);
+    const res = await api.post(endpoints.rides.start, { vehicleId });
+    return unwrap(res);
   },
 
   async end(
     rideId: string,
     reason: "arrived" | "cancelled" | "sos_resolved" = "arrived",
   ): Promise<{ ended: boolean }> {
-    const { data } = await api.post(endpoints.rides.end(rideId), { reason });
-    return unwrap(data);
+    const res = await api.post(endpoints.rides.end(rideId), { reason });
+    return unwrap(res);
   },
 
   async updateLocation(
@@ -36,7 +36,12 @@ export const ridesService = {
   },
 
   async history(): Promise<Ride[]> {
-    const { data } = await api.get(endpoints.rides.history);
-    return unwrap(data);
+    try {
+      const res = await api.get(endpoints.rides.history);
+      const data = unwrap(res);
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 };

@@ -10,17 +10,17 @@ export const sosService = {
     rideId?: string;
     type?: SosType;
   }): Promise<SosEvent> {
-    const { data } = await api.post(endpoints.sos.trigger, {
+    const res = await api.post(endpoints.sos.trigger, {
       lat: params.location.lat,
       lng: params.location.lng,
       rideId: params.rideId,
       type: params.type || "panic",
     });
-    return unwrap(data);
+    return unwrap(res);
   },
 
   async cancel(sosId: string, pin: string): Promise<{ cancelled: boolean }> {
-    const { data } = await api.post(endpoints.sos.cancel(sosId), { pin });
-    return unwrap(data);
+    const res = await api.post(endpoints.sos.cancel(sosId), { pin });
+    return unwrap(res);
   },
 };
